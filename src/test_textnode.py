@@ -1,7 +1,13 @@
 import unittest
 
 from delimiter import split_nodes_delimiter
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import (
+    TextNode,
+    TextType,
+    extract_markdown_images,
+    extract_markdown_links,
+    text_node_to_html_node,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -118,6 +124,97 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(len(new_nodes), 1)
         self.assertEqual(new_nodes[0].text, "This is plain text")
         self.assertEqual(new_nodes[0].text_type, TextType.TEXT)
+
+    def test_extract_markdown_images(self):
+        text = "This is text with an ![image](https://www.example.com/image.jpg) and ![another](https://www.example.com/another.jpg)"
+        images = extract_markdown_images(text)
+        self.assertListEqual(
+            images,
+            [
+                ("image", "https://www.example.com/image.jpg"),
+                ("another", "https://www.example.com/another.jpg"),
+            ],
+        )
+        text = "This is a text with nothing"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [])
+        text = "This is an empty alt text ![](https://www.example.com/image.jpg)"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [("", "https://www.example.com/image.jpg")])
+        text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [])
+        text = "This is text with a [link](https://www.example.com) and an image ![image](https://www.example.com/image.jpg)"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [("image", "https://www.example.com/image.jpg")])
+        text = "This is text with four images ![image1](https://www.example.com/image1.jpg), the second ![image2](https://www.example.com/image2.jpg), the third ![image3](https://www.example.com/image3.jpg), and the fourth ![image4](https://www.example.com/image4.jpg)"
+        images = extract_markdown_images(text)
+        self.assertListEqual(
+            images,
+            [
+                ("image1", "https://www.example.com/image1.jpg"),
+                ("image2", "https://www.example.com/image2.jpg"),
+                ("image3", "https://www.example.com/image3.jpg"),
+                ("image4", "https://www.example.com/image4.jpg"),
+            ],
+        )
+        images = extract_markdown_images("")
+        self.assertListEqual(images, [])
+        text = "This is text with a missing closing parenthesis ![image](https://www.example.com/image.jpg"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [])
+        text = "This is text with a missing closing bracket ![image(https://www.example.com/image.jpg"
+        images = extract_markdown_images(text)
+        self.assertListEqual(images, [])
+
+    def test_extract_markdown_links(self):
+        text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(
+            links,
+            [
+                ("link", "https://www.example.com"),
+                ("another", "https://www.example.com/another"),
+            ],
+        )
+        text = "This is text with nothing"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [])
+        text = "This is text with an empty anchor text [](https://www.example.com)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [("", "https://www.example.com")])
+        text = "This is text with an image ![image](https://www.example.com/image.jpg)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [])
+        text = "This is text with a [link](https://www.example.com) and an image ![image](https://www.example.com/image.jpg)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [("link", "https://www.example.com")])
+        text = "This is text with four links [link1](https://www.example.com/link1), the second [link2](https://www.example.com/link2), the third [link3](https://www.example.com/link3), and the fourth [link4](https://www.example.com/link4)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(
+            links,
+            [
+                ("link1", "https://www.example.com/link1"),
+                ("link2", "https://www.example.com/link2"),
+                ("link3", "https://www.example.com/link3"),
+                ("link4", "https://www.example.com/link4"),
+            ],
+        )
+        links = extract_markdown_links("")
+        self.assertListEqual(links, [])
+        text = "This is text with a missing closing parenthesis [link](https://www.example.com/image.jpg"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [])
+        text = "This is text with a missing closing bracket [link(https://www.example.com/image.jpg"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [])
+
+    def test_extract_markdown_images_nested_link(self):
+        # Known limitation: nested image-in-link is partially matched
+        # only the malformed alt text is returned
+        text = "[![image](https://www.example.com/image.jpg)](https://www.example.com)"
+        links = extract_markdown_links(text)
+        self.assertListEqual(links, [("![image", "https://www.example.com/image.jpg")])
 
 
 if __name__ == "__main__":
