@@ -12,7 +12,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             new_nodes.append(node)
             continue
         if len(parts) % 2 == 0:
-            raise Exception(
+            raise ValueError(
                 f"Closing delimiter {delimiter} not found in text {node.text}"
             )
         for i in range(len(parts)):
@@ -67,3 +67,13 @@ def split_nodes_link(old_nodes):
         if parts[1] != "":
             new_nodes.extend(split_nodes_link([TextNode(parts[1], TextType.TEXT)]))
     return new_nodes
+
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes

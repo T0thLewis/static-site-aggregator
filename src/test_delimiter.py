@@ -1,6 +1,13 @@
 import unittest
 
-from delimiter import split_nodes_delimiter, split_nodes_image, split_nodes_link
+from typing_extensions import Text
+
+from delimiter import (
+    split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
+    text_to_textnodes,
+)
 from textnode import TextNode, TextType
 
 
@@ -358,6 +365,121 @@ class TestDelimiter(unittest.TestCase):
             [
                 TextNode("anchor text", TextType.LINK, "https://www.example.com"),
                 TextNode(" a nice link", TextType.TEXT),
+            ],
+        )
+
+    def test_text_to_textnodes_basic(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            nodes,
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode(
+                    "obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"
+                ),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ],
+        )
+        text = "This is a basic text node"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            nodes,
+            [
+                TextNode("This is a basic text node", TextType.TEXT),
+            ],
+        )
+
+    def test_text_to_textnodes_mixed(self):
+        text = "I found _this cool link_ take a look [link](https://boot.dev), isn't it **awesome**? It does contain some **code** in `italic` though, so **you** might want to _snap_ a _picture_ of it. Here is the link for that `image` ![absolute cinema](https://i.imgur.com/absolute-cinema.jpg)"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            nodes,
+            [
+                TextNode("I found ", TextType.TEXT),
+                TextNode("this cool link", TextType.ITALIC),
+                TextNode(" take a look ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+                TextNode(", isn't it ", TextType.TEXT),
+                TextNode("awesome", TextType.BOLD),
+                TextNode("? It does contain some ", TextType.TEXT),
+                TextNode("code", TextType.BOLD),
+                TextNode(" in ", TextType.TEXT),
+                TextNode("italic", TextType.CODE),
+                TextNode(" though, so ", TextType.TEXT),
+                TextNode("you", TextType.BOLD),
+                TextNode(" might want to ", TextType.TEXT),
+                TextNode("snap", TextType.ITALIC),
+                TextNode(" a ", TextType.TEXT),
+                TextNode("picture", TextType.ITALIC),
+                TextNode(" of it. Here is the link for that ", TextType.TEXT),
+                TextNode("image", TextType.CODE),
+                TextNode(" ", TextType.TEXT),
+                TextNode(
+                    "absolute cinema",
+                    TextType.IMAGE,
+                    "https://i.imgur.com/absolute-cinema.jpg",
+                ),
+            ],
+        )
+
+    def test_text_to_textnodes_adjacent_formats(self):
+        text = "**bold****bold**_italic_`code`_italic__italic_[link](https://boot.dev)![image](https://i.imgur.com/image.jpg)[another link](https://boot.dev)_italic_**bold**"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            nodes,
+            [
+                TextNode("bold", TextType.BOLD),
+                TextNode("bold", TextType.BOLD),
+                TextNode("italic", TextType.ITALIC),
+                TextNode("code", TextType.CODE),
+                TextNode("italic", TextType.ITALIC),
+                TextNode("italic", TextType.ITALIC),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/image.jpg"),
+                TextNode("another link", TextType.LINK, "https://boot.dev"),
+                TextNode("italic", TextType.ITALIC),
+                TextNode("bold", TextType.BOLD),
+            ],
+        )
+
+    def test_text_to_textnodes_invalid_markdown(self):
+        text = "This text contains **invalid' _markdown_"
+        with self.assertRaises(ValueError):
+            text_to_textnodes(text)
+
+        text = "This text contains **invalid** _markdown**"
+        with self.assertRaises(ValueError):
+            text_to_textnodes(text)
+
+        text = "This text contains **invalid** _markdown_`code'"
+        with self.assertRaises(ValueError):
+            text_to_textnodes(text)
+
+    def test_text_to_textnodes_repetition(self):
+        text = "This **bold** text **contains** **only** **bold****text** and **nothing else**"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            nodes,
+            [
+                TextNode("This ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" text ", TextType.TEXT),
+                TextNode("contains", TextType.BOLD),
+                TextNode(" ", TextType.TEXT),
+                TextNode("only", TextType.BOLD),
+                TextNode(" ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode("text", TextType.BOLD),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("nothing else", TextType.BOLD),
             ],
         )
 
