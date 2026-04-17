@@ -1,7 +1,5 @@
 import unittest
 
-from typing_extensions import Text
-
 from delimiter import (
     split_nodes_delimiter,
     split_nodes_image,
