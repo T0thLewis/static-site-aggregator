@@ -79,6 +79,11 @@ This is the same paragraph on a new line
         block_type = block_to_block_type(block)
         self.assertEqual(block_type, BlockType.HEADING)
 
+    def test_block_to_block_type_heading_multiple(self):
+        block = "#### This is a heading"
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.HEADING)
+
     def test_block_to_block_type_code(self):
         block = "```This is code```"
         block_type = block_to_block_type(block)
@@ -113,3 +118,7 @@ This is the same paragraph on a new line
         block = ""
         block_type = block_to_block_type(block)
         self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+
+if __name__ == "__main__":
+    unittest.main()
