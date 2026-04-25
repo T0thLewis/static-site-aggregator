@@ -3,9 +3,12 @@ from generate_page import generate_page
 
 
 def main():
-    print("Initiating copy of static files...")
+    print("----------------------------------")
+    print("Initializing static site aggregator...")
+    print("----------------------------------")
+    print("* Copying static files...")
     copy_files_wrapper("static", "public")
-    print("Generating pages...")
+    print("* Generating pages...")
     generate_page("content/index.md", "template.html", "public/index.html")
 
 
