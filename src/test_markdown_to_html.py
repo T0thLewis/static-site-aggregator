@@ -233,6 +233,8 @@ class TestMarkdownToHtml(unittest.TestCase):
                 - First bullet with _italic_
                 - Second bullet with `code`
                 - Third bullet plain
+                - Fourth bullet with a link [here](https://example.com)
+                - Fifth bullet with an image ![image](https://example.com/image.png)
 
                 ##### Ordered Stuff
 
@@ -261,6 +263,8 @@ class TestMarkdownToHtml(unittest.TestCase):
                 "<li>First bullet with <i>italic</i></li>"
                 "<li>Second bullet with <code>code</code></li>"
                 "<li>Third bullet plain</li>"
+                '<li>Fourth bullet with a link <a href="https://example.com">here</a></li>'
+                '<li>Fifth bullet with an image <img src="https://example.com/image.png" alt="image"/></li>'
                 "</ul>"
                 "<h5>Ordered Stuff</h5>"
                 "<ol>"

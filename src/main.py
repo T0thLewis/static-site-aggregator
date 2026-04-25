@@ -1,9 +1,9 @@
-from textnode import TextNode
+from copystatic import copy_files_wrapper
 
 
 def main():
-    text_node = TextNode("This is some anchor text", "link", "https://www.boot.dev")
-    print(text_node)
+    print("Initiating copy of static files...")
+    copy_files_wrapper("static", "public")
 
 
 if __name__ == "__main__":
